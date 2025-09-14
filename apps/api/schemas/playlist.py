@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 import uuid
 from datetime import datetime
@@ -23,8 +23,7 @@ class PlaylistItemResponse(BaseModel):
     idea_id: uuid.UUID
     position: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PlaylistResponse(BaseModel):
     id: uuid.UUID
@@ -35,5 +34,4 @@ class PlaylistResponse(BaseModel):
     created_at: datetime
     items: List[PlaylistItemResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

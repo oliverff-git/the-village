@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Boolean, Integer
-from sqlalchemy.dialects.postgresql import UUID
+from core.types import GUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -9,8 +9,8 @@ from core.database import Base
 class Playlist(Base):
     __tablename__ = "playlists"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    owner_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     is_public = Column(Boolean, default=False, nullable=False)
@@ -21,9 +21,9 @@ class Playlist(Base):
 class PlaylistItem(Base):
     __tablename__ = "playlist_items"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    playlist_id = Column(UUID(as_uuid=True), ForeignKey("playlists.id"), nullable=False)
-    idea_id = Column(UUID(as_uuid=True), ForeignKey("ideas.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    playlist_id = Column(GUID(), ForeignKey("playlists.id"), nullable=False)
+    idea_id = Column(GUID(), ForeignKey("ideas.id"), nullable=False)
     position = Column(Integer, nullable=False)
 
     playlist = relationship("Playlist", back_populates="items")

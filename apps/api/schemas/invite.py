@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 import uuid
 from typing import Optional
@@ -14,8 +14,7 @@ class InviteResponse(BaseModel):
     used_by: Optional[uuid.UUID] = None
     used_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class InviteValidateResponse(BaseModel):
     ok: bool

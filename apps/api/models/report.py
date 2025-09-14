@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID
+from core.types import GUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -16,10 +16,10 @@ class ReportStatus(str, enum.Enum):
 class Report(Base):
     __tablename__ = "reports"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    reporter_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    reporter_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
     target_type = Column(String, nullable=False)  # 'idea', 'user', 'mood_post', etc.
-    target_id = Column(UUID(as_uuid=True), nullable=False)
+    target_id = Column(GUID(), nullable=False)
     reason = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     status = Column(SQLEnum(ReportStatus), default=ReportStatus.PENDING, nullable=False)

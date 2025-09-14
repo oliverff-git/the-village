@@ -13,4 +13,4 @@ docs = {
 
 @router.get("/{slug}")
 def get_legal(slug: str):
-return {"slug": slug, "markdown": docs.get(slug, "# Not found")}
+    return {"slug": slug, "markdown": docs.get(slug, "# Not found")}

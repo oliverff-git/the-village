@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import argon2
+from argon2 import PasswordHasher
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -11,14 +12,34 @@ from .database import get_db
 from models import User
 from models.session import RefreshToken
 
-pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+# Initialize Argon2 password hasher
+password_hasher = PasswordHasher()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    """
+    Verify password with backward compatibility.
+    Supports both old passlib hashes and new argon2-cffi hashes.
+    """
+    try:
+        # Try new argon2-cffi verification first
+        password_hasher.verify(hashed_password, plain_password)
+        return True
+    except argon2.exceptions.VerifyMismatchError:
+        return False
+    except argon2.exceptions.InvalidHash:
+        # Fallback to passlib for old hashes during transition period
+        # This allows existing users to still login
+        try:
+            from passlib.context import CryptContext
+            fallback_context = CryptContext(schemes=["argon2"], deprecated="auto")
+            return fallback_context.verify(plain_password, hashed_password)
+        except Exception:
+            return False
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    """Generate password hash using modern argon2-cffi."""
+    return password_hasher.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()

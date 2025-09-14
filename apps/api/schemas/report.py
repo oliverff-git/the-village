@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 import uuid
@@ -18,6 +18,4 @@ class ReportResponse(BaseModel):
     status: str
     action_taken: Optional[str] = None
 
-    class Config:
-    from_attributes = True
-    from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

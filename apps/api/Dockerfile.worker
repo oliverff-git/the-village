@@ -12,10 +12,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
-RUN set -eux; \
-    grep -v '^prometheus-fastapi-instrumentator' requirements.txt > /tmp/requirements.noprom.txt; \
-    pip install --no-cache-dir -r /tmp/requirements.noprom.txt; \
-    pip install --no-cache-dir --no-deps prometheus-fastapi-instrumentator==7.0.0
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 

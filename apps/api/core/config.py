@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 import os
 
@@ -58,8 +58,6 @@ class Settings(BaseSettings):
         origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
         return [origin.strip() for origin in origins]
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
 settings = Settings()

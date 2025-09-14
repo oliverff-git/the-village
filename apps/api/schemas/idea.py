@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List, Any
 from datetime import datetime
 import uuid
@@ -28,8 +28,7 @@ class StemResponse(BaseModel):
     file_url: str
     license: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class IdeaResponse(BaseModel):
     id: uuid.UUID
@@ -49,8 +48,7 @@ class IdeaResponse(BaseModel):
     status: str
     stems: List[StemResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ProvenanceExport(BaseModel):
     id: str
