@@ -1,0 +1,14 @@
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I", "N", "UP", "S", "B", "A", "C4", "T20"]
+ignore = ["E501"]
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --cov=. --cov-report=html --cov-report=term"

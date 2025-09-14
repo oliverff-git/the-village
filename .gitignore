@@ -1,0 +1,67 @@
+# Node
+node_modules/
+.pnp/
+.pnp.js
+
+# Next.js
+.next/
+*.next/
+out/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+*.so
+.Python
+*.egg-info/
+
+# Coverage & test
+coverage/
+htmlcov/
+.pytest_cache/
+.nyc_output
+*.cover
+.coverage
+.coverage.*
+playwright-report/
+test-results/
+
+# Build caches
+dist/
+build/
+.turbo/
+
+# Environments
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# DB
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
