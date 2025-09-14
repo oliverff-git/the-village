@@ -30,15 +30,15 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 def create_refresh_token(user_id: str, db: Session) -> str:
-import secrets
+    import secrets
 
-token = secrets.token_urlsafe(32)
-expires_at = datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
 
-refresh_token = RefreshToken(token=token, user_id=user_id, expires_at=expires_at)
-db.add(refresh_token)
-db.commit()
-return token
+    refresh_token = RefreshToken(token=token, user_id=user_id, expires_at=expires_at)
+    db.add(refresh_token)
+    db.commit()
+    return token
 def verify_refresh_token(token: str, db: Session) -> Optional[User]:
     rt = db.query(RefreshToken).filter(
         RefreshToken.token == token,
@@ -49,8 +49,8 @@ def verify_refresh_token(token: str, db: Session) -> Optional[User]:
     return db.query(User).filter(User.id == rt.user_id).first()
 
 async def get_current_user(
-token: str = Depends(oauth2_scheme),
-db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -58,20 +58,20 @@ db: Session = Depends(get_db),
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-try:
-    payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-    user_id: str = payload.get("sub")
-    if user_id is None:
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
         raise credentials_exception
-except JWTError:
-    raise credentials_exception
 
-user = db.query(User).filter(User.id == user_id).first()
-if user is None:
-    raise credentials_exception
-if not user.is_active:
-    raise HTTPException(status_code=403, detail="User account is suspended")
-return user
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise credentials_exception
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="User account is suspended")
+    return user
 async def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role not in ["admin", "moderator"]:
         raise HTTPException(status_code=403, detail="Not enough permissions")
