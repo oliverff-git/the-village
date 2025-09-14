@@ -52,6 +52,10 @@ services:
       dockerfile: Dockerfile
     environment:
       POSTGRES_HOST: postgres
+      POSTGRES_DB: thevillage
+      POSTGRES_USER: village_user
+      POSTGRES_PASSWORD: change_me_in_production
+      DATABASE_URL: postgresql://village_user:change_me_in_production@postgres:5432/thevillage
       REDIS_URL: redis://redis:6379/0
       S3_ENDPOINT: http://minio:9000
     ports:
@@ -96,6 +100,7 @@ services:
         condition: service_started
     volumes:
       - ./apps/web:/app
+    command: sh -c "npm install --no-audit --no-fund && npm run build && npm start"
 
 volumes:
   postgres_data:
