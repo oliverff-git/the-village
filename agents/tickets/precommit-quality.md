@@ -1,15 +1,7 @@
-Agent: Codex
-Objective: Pre-commit baseline; ruff/black checks; optional mypy relaxed.
-Tests:
-- CI format/lint/typecheck jobs pass.
-Run:
-- make format lint || true
-- make typecheck || true
-Done when:
-- All quality jobs are green in CI.
-Notes:
-- Configure .pre-commit-config.yaml with ruff and black.
-- Add Makefile targets for format, lint, typecheck.
-- Keep mypy relaxed initially to avoid blocking.
-
-
+Agent: Precommit-Quality (codex)
+Objective: ruff/black checks locally and in CI.
+Scope: .pre-commit-config.yaml, Makefile, CI jobs.
+Tests: CI format/lint jobs
+Constraints: edit only inside this worktree
+Run: make format lint
+Acceptance: format/lint jobs green.

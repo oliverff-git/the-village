@@ -1,13 +1,7 @@
-Agent: Codex
-Objective: CI e2e smoke green.
-Tests:
-- apps/web/tests-e2e/smoke.spec.ts
-Commands:
-- pnpm --filter web build
-- npx playwright install --with-deps
-- docker compose up -d postgres redis minio api web
-- pnpm --filter web test:e2e
-Done when:
-- e2e job passes in CI.
-
-
+Agent: CI-E2E (codex)
+Objective: Playwright smoke runs in CI with compose up api+web.
+Scope: apps/api/Dockerfile, docker-compose.yml, CI workflow.
+Tests: apps/web/tests-e2e/smoke.spec.ts
+Constraints: edit only inside this worktree
+Run: pnpm --filter web test:e2e
+Acceptance: e2e job green.

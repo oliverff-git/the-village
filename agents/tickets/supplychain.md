@@ -1,12 +1,7 @@
-Agent: Codex
-Objective: Dependabot/CodeQL/gitleaks finalized; SBOM optional.
-Tests:
-- CI shows secret scan and CodeQL jobs triggered.
-Run:
-- npx gitleaks detect --source . || true
-Done when:
-- CodeQL workflow present; gitleaks job runs in CI; optional SBOM script exists.
-Notes:
-- Ensure .github workflows for CodeQL; add scripts/gen-sbom.sh and sbom/.
-
-
+Agent: SupplyChain (codex)
+Objective: Dependabot/CodeQL/gitleaks in CI.
+Scope: .github/*, scripts/gen-sbom.sh.
+Tests: CI security workflows
+Constraints: edit only inside this worktree
+Run: npx gitleaks detect --source .
+Acceptance: bots/jobs present.
