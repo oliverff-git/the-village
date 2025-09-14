@@ -31,11 +31,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 def create_refresh_token(user_id: str, db: Session) -> str:
     import secrets
+    import uuid
 
     token = secrets.token_urlsafe(32)
     expires_at = datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
 
-    refresh_token = RefreshToken(token=token, user_id=user_id, expires_at=expires_at)
+    # Convert string to UUID if needed
+    user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+    refresh_token = RefreshToken(token=token, user_id=user_uuid, expires_at=expires_at)
     db.add(refresh_token)
     db.commit()
     return token
@@ -66,7 +69,10 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == user_id).first()
+    # Convert string to UUID for database query
+    import uuid
+    user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+    user = db.query(User).filter(User.id == user_uuid).first()
     if user is None:
         raise credentials_exception
     if not user.is_active:

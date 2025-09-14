@@ -52,16 +52,6 @@ class IdeaResponse(BaseModel):
     class Config:
         from_attributes = True
 
-    created_at: datetime
-    parent_id: Optional[uuid.UUID] = None
-    provenance_json: Optional[Any] = None
-    visibility: str
-    status: str
-    stems: List[StemResponse] = []
-
-    class Config:
-        from_attributes = True
-
 class ProvenanceExport(BaseModel):
     id: str
     title: str

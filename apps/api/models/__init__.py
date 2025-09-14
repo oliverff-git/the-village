@@ -8,16 +8,16 @@ from .takedown import Takedown
 from .audit import AuditEvent
 from .session import RefreshToken
 
-all = [
-"User",
-"Invite",
-"Idea",
-"Stem",
-"Playlist",
-"PlaylistItem",
-"MoodPost",
-"Report",
-"Takedown",
-"AuditEvent",
-"RefreshToken",
+__all__ = [
+    "User",
+    "Invite",
+    "Idea",
+    "Stem",
+    "Playlist",
+    "PlaylistItem",
+    "MoodPost",
+    "Report",
+    "Takedown",
+    "AuditEvent",
+    "RefreshToken",
 ]

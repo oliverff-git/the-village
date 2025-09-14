@@ -6,6 +6,7 @@ import enum
 
 from core.database import Base
 
+
 class UserRole(str, enum.Enum):
     USER = "user"
     MODERATOR = "moderator"

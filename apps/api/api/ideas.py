@@ -9,10 +9,17 @@ from core.security import get_current_user
 from core.queue import enqueue_job
 from models import User, Idea, Stem, AuditEvent
 from models.idea import IdeaStatus, License, Visibility
-from schemas.idea import IdeaCreate, IdeaUpdate, IdeaResponse, IdeaFork, ProvenanceExport
+from schemas.idea import (
+    IdeaCreate,
+    IdeaUpdate,
+    IdeaResponse,
+    IdeaFork,
+    ProvenanceExport,
+)
 from workers.media import process_audio_upload
 
 router = APIRouter()
+
 
 @router.get("/", response_model=List[IdeaResponse])
 def list_ideas(
@@ -25,7 +32,9 @@ def list_ideas(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    query = db.query(Idea).filter(Idea.status == IdeaStatus.PUBLISHED, Idea.visibility == Visibility.MEMBERS)
+    query = db.query(Idea).filter(
+        Idea.status == IdeaStatus.PUBLISHED, Idea.visibility == Visibility.MEMBERS
+    )
     if q:
         query = query.filter(or_(Idea.title.ilike(f"%{q}%"), Idea.text.ilike(f"%{q}%")))
     if type:
@@ -36,21 +45,43 @@ def list_ideas(
         query = query.filter(Idea.parent_id == parent_id)
     return query.order_by(Idea.created_at.desc()).offset(skip).limit(limit).all()
 
+
 @router.get("/{idea_id}", response_model=IdeaResponse)
-def get_idea(idea_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    idea = db.query(Idea).filter(Idea.id == idea_id).first()
+def get_idea(
+    idea_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    import uuid
+    # Convert string to UUID for database query
+    idea_uuid = uuid.UUID(idea_id) if isinstance(idea_id, str) else idea_id
+    idea = db.query(Idea).filter(Idea.id == idea_uuid).first()
     if not idea:
         raise HTTPException(status_code=404, detail="Idea not found")
     if idea.visibility == Visibility.PRIVATE and idea.author_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     return idea
 
+
 @router.post("/", response_model=IdeaResponse)
-def create_idea(idea_data: IdeaCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_idea(
+    idea_data: IdeaCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     if idea_data.parent_id:
-        parent = db.query(Idea).filter(Idea.id == idea_data.parent_id).first()
-        if parent and parent.license == License.CC_BY_SA_4_0 and idea_data.license != "CC_BY_SA_4_0":
-            raise HTTPException(status_code=400, detail="Share-alike license must be preserved in derivatives")
+        import uuid
+        parent_uuid = uuid.UUID(str(idea_data.parent_id)) if idea_data.parent_id else None
+        parent = db.query(Idea).filter(Idea.id == parent_uuid).first()
+        if (
+            parent
+            and parent.license == License.CC_BY_SA_4_0
+            and idea_data.license != "CC_BY_SA_4_0"
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Share-alike license must be preserved in derivatives",
+            )
 
     idea = Idea(
         author_id=current_user.id,
@@ -61,14 +92,27 @@ def create_idea(idea_data: IdeaCreate, current_user: User = Depends(get_current_
         license=idea_data.license,
         parent_id=idea_data.parent_id,
         visibility=idea_data.visibility,
-        status=IdeaStatus.HELD if idea_data.type == "audio" and idea_data.media_url else IdeaStatus.PUBLISHED,
+        status=(
+            IdeaStatus.HELD
+            if idea_data.type == "audio" and idea_data.media_url
+            else IdeaStatus.PUBLISHED
+        ),
     )
 
     if idea_data.parent_id:
-        parent = db.query(Idea).filter(Idea.id == idea_data.parent_id).first()
+        # Reuse the parent_uuid from above if it exists
+        if 'parent_uuid' not in locals():
+            import uuid
+            parent_uuid = uuid.UUID(str(idea_data.parent_id))
+        parent = db.query(Idea).filter(Idea.id == parent_uuid).first()
         if parent:
             idea.provenance_json = (parent.provenance_json or []) + [
-                {"id": str(parent.id), "title": parent.title, "author": parent.author.handle, "license": parent.license}
+                {
+                    "id": str(parent.id),
+                    "title": parent.title,
+                    "author": parent.author.handle,
+                    "license": parent.license,
+                }
             ]
 
     db.add(idea)
@@ -78,13 +122,27 @@ def create_idea(idea_data: IdeaCreate, current_user: User = Depends(get_current_
     if idea.type == "audio" and idea.media_url:
         enqueue_job(process_audio_upload, str(idea.id))
 
-    audit = AuditEvent(actor_id=current_user.id, action="idea_created", payload_json={"idea_id": str(idea.id)})
+    audit = AuditEvent(
+        actor_id=current_user.id,
+        action="idea_created",
+        payload_json={"idea_id": str(idea.id)},
+    )
     db.add(audit)
     db.commit()
     return idea
+
+
 @router.post("/{idea_id}/fork", response_model=IdeaResponse)
-def fork_idea(idea_id: str, fork_data: IdeaFork, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    parent = db.query(Idea).filter(Idea.id == idea_id).first()
+def fork_idea(
+    idea_id: str,
+    fork_data: IdeaFork,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    import uuid
+    # Convert string to UUID for database query
+    idea_uuid = uuid.UUID(idea_id) if isinstance(idea_id, str) else idea_id
+    parent = db.query(Idea).filter(Idea.id == idea_uuid).first()
     if not parent:
         raise HTTPException(status_code=404, detail="Parent idea not found")
 
@@ -105,15 +163,27 @@ def fork_idea(idea_id: str, fork_data: IdeaFork, current_user: User = Depends(ge
     )
 
     fork.provenance_json = (parent.provenance_json or []) + [
-        {"id": str(parent.id), "title": parent.title, "author": parent.author.handle, "license": parent.license}
+        {
+            "id": str(parent.id),
+            "title": parent.title,
+            "author": parent.author.handle,
+            "license": parent.license,
+        }
     ]
 
     db.add(fork)
     db.commit()
     db.refresh(fork)
     return fork
+
+
 @router.patch("/{idea_id}", response_model=IdeaResponse)
-def update_idea(idea_id: str, idea_update: IdeaUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_idea(
+    idea_id: str,
+    idea_update: IdeaUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     idea = db.query(Idea).filter(Idea.id == idea_id).first()
     if not idea:
         raise HTTPException(status_code=404, detail="Idea not found")
@@ -126,19 +196,32 @@ def update_idea(idea_id: str, idea_update: IdeaUpdate, current_user: User = Depe
     db.commit()
     db.refresh(idea)
     return idea
+
+
 @router.delete("/{idea_id}")
-def delete_idea(idea_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_idea(
+    idea_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     idea = db.query(Idea).filter(Idea.id == idea_id).first()
     if not idea:
         raise HTTPException(status_code=404, detail="Idea not found")
     if idea.author_id != current_user.id and current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Not authorized to delete this idea")
+        raise HTTPException(
+            status_code=403, detail="Not authorized to delete this idea"
+        )
     idea.status = IdeaStatus.REMOVED
     db.commit()
     return {"message": "Idea removed"}
 
+
 @router.get("/{idea_id}/provenance", response_model=ProvenanceExport)
-def get_provenance(idea_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_provenance(
+    idea_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     idea = db.query(Idea).filter(Idea.id == idea_id).first()
     if not idea:
         raise HTTPException(status_code=404, detail="Idea not found")
