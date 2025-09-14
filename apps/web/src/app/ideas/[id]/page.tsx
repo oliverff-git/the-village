@@ -10,9 +10,9 @@ const [idea, setIdea] = useState<any | null>(null)
 
 useEffect(() => {
 (async () => {
-const res = await fetch(${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/ideas/${params.id}, {
-headers: { Authorization: Bearer ${localStorage.getItem('token') || ''} }
-})
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/ideas/${params.id}`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
+  })
 if (res.ok) setIdea(await res.json())
 })()
 }, [params.id])
@@ -29,15 +29,15 @@ return (
 </div>
 <div className="flex gap-2">
 <Button onClick={async () => {
-await fetch(${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/ideas/${idea.id}/fork, {
-method: 'POST',
-headers: {
-Authorization: Bearer ${localStorage.getItem('token') || ''},
-'Content-Type': 'application/json'
-},
-body: JSON.stringify({ license: idea.license })
-})
-window.location.href = '/feed'
+  await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/ideas/${idea.id}/fork`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ license: idea.license })
+  })
+  window.location.href = '/feed'
 }}>Fork</Button>
 <Link href="/feed"><Button>Back</Button></Link>
 </div>

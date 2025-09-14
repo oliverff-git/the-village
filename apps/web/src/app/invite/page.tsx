@@ -12,10 +12,10 @@ return (
 <h1 className="text-2xl font-bold">Invite a friend</h1>
 <Button onClick={async ()=>{
 const inv = await api.createInvite()
-const url = ${window.location.origin}/invite/${inv.token}
+const url = `${window.location.origin}/invite/${inv.token}`
 setLink(url)
-const msg = encodeURIComponent(Join The Village: ${url})
-setWa(https://wa.me/?text=${msg})
+const msg = encodeURIComponent(`Join The Village: ${url}`)
+setWa(`https://wa.me/?text=${msg}`)
 }}>Generate Invite</Button>
 
   {link && (

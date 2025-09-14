@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
@@ -11,9 +11,7 @@ const [validating, setValidating] = useState(true)
 const [valid, setValid] = useState(false)
 const [error, setError] = useState('')
 
-useEffect(() => { validateInvite() }, [])
-
-const validateInvite = async () => {
+const validateInvite = useCallback(async () => {
 try {
 await api.validateInvite(params.token)
 setValid(true)
@@ -22,7 +20,9 @@ setError('This invite is invalid or has expired')
 } finally {
 setValidating(false)
 }
-}
+}, [params.token])
+
+useEffect(() => { validateInvite() }, [validateInvite])
 
 if (validating) {
 return <div className="flex min-h-screen items-center justify-center"><p>Validating invite...</p></div>
@@ -44,8 +44,8 @@ return (
 <div className="flex min-h-screen items-center justify-center">
 <div className="text-center space-y-4 max-w-md">
 <h1 className="text-2xl font-bold">Welcome to The Village!</h1>
-<p className="text-muted-foreground">You've been invited to join our creative community. Click below to create your account.</p>
-<Button onClick={() => router.push(/auth/register?token=${params.token})}>Create Account</Button>
+<p className="text-muted-foreground">You&apos;ve been invited to join our creative community. Click below to create your account.</p>
+<Button onClick={() => router.push(`/auth/register?token=${params.token}`)}>Create Account</Button>
 </div>
 </div>
 )

@@ -28,16 +28,16 @@ localStorage.removeItem('refresh_token')
 }
 
 async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-const url = ${API_URL}${endpoint}
-const headers: HeadersInit = { 'Content-Type': 'application/json', ...(options.headers || {}) }
-const tok = this.getToken()
-if (tok) headers['Authorization'] = Bearer ${tok}
-const response = await fetch(url, { ...options, headers })
-if (!response.ok) {
-if (response.status === 401) { this.clearToken(); if (typeof window !== 'undefined') window.location.href = '/auth/login' }
-throw new Error(API Error: ${response.statusText})
-}
-return response.json()
+  const url = `${API_URL}${endpoint}`
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(options.headers as Record<string, string> || {}) }
+  const tok = this.getToken()
+  if (tok) headers['Authorization'] = `Bearer ${tok}`
+  const response = await fetch(url, { ...options, headers })
+  if (!response.ok) {
+    if (response.status === 401) { this.clearToken(); if (typeof window !== 'undefined') window.location.href = '/auth/login' }
+    throw new Error(`API Error: ${response.statusText}`)
+  }
+  return response.json()
 }
 
 async login(data: LoginData): Promise<TokenResponse> {
@@ -54,8 +54,8 @@ return this.request('/auth/register', { method: 'POST', body: JSON.stringify(dat
 async getMe(): Promise<any> { return this.request('/auth/me') }
 
 async getIdeas(params?: any): Promise<any> {
-const qs = params ? ?${new URLSearchParams(params)} : ''
-return this.request(/ideas${qs})
+  const qs = params ? `?${new URLSearchParams(params)}` : ''
+  return this.request(`/ideas${qs}`)
 }
 
 async createIdea(data: any): Promise<any> {
@@ -63,10 +63,10 @@ return this.request('/ideas', { method: 'POST', body: JSON.stringify(data) })
 }
 
 async forkIdea(ideaId: string): Promise<any> {
-return this.request(/ideas/${ideaId}/fork, { method: 'POST', body: JSON.stringify({ license: 'CC_BY_4_0' }) })
+  return this.request(`/ideas/${ideaId}/fork`, { method: 'POST', body: JSON.stringify({ license: 'CC_BY_4_0' }) })
 }
 
 async createInvite(): Promise<any> { return this.request('/invites', { method: 'POST' }) }
-async validateInvite(token: string): Promise<any> { return this.request(/invites/join/${token}, { method: 'POST' }) }
+async validateInvite(token: string): Promise<any> { return this.request(`/invites/join/${token}`, { method: 'POST' }) }
 }
 export const api = new ApiClient()

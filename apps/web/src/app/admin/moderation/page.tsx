@@ -5,9 +5,9 @@ export default function Moderation() {
 const [items, setItems] = useState<any[]>([])
 useEffect(() => {
 (async () => {
-const res = await fetch(${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/mod/queue, {
-headers: { Authorization: Bearer ${localStorage.getItem('token') || ''} }
-})
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/mod/queue`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
+  })
 if (res.ok) setItems(await res.json())
 })()
 }, [])
