@@ -47,7 +47,7 @@ jobs:
           mypy . || true
 
   api_tests:
-    name: API Tests (pytest)
+    name: API Tests (pytest + coverage)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,9 +60,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Run tests (basic pytest)
+      - name: Run tests with coverage
         working-directory: apps/api
-        run: pytest -q
+        run: pytest -q --cov=. --cov-report=xml --cov-fail-under=75
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage-xml
+          path: apps/api/coverage.xml
 
   web_build_playwright:
     name: Web build + Playwright smoke

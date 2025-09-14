@@ -23,6 +23,7 @@ ENV/
 # Coverage & test
 coverage/
 htmlcov/
+coverage.xml
 .pytest_cache/
 .nyc_output
 *.cover
