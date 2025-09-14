@@ -3,9 +3,26 @@ repos:
     rev: 24.8.0
     hooks:
       - id: black
-        files: ^apps/api/.*\.py$
+        language_version: python3.11
+        files: ^apps/api/
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
+    rev: v0.6.4
     hooks:
       - id: ruff
-        files: ^apps/api/.*\.py$
+        args: [--fix]
+        files: ^apps/api/
+      - id: ruff-format
+        files: ^apps/api/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        additional_dependencies: [pydantic==2.7.3, types-requests]
+        files: ^apps/api/
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks

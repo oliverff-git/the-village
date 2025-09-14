@@ -69,7 +69,6 @@ app.include_router(legal.router, prefix="/legal", tags=["legal"])
 
 
 @app.get("/")
-
 def read_root():
     return {"name": "The Village API", "version": "1.0.0", "status": "operational"}
 

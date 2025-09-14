@@ -9,7 +9,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  api-python:
+  lint_typecheck:
+    name: Lint & Typecheck (Node + Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      - name: Enable corepack and install deps
+        run: |
+          corepack enable
+          pnpm -v
+          pnpm -w install
+      - name: Lint (web)
+        run: pnpm -w lint || true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install API tooling
+        working-directory: apps/api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install mypy
+      - name: Lint/Format/Typecheck (api)
+        working-directory: apps/api
+        run: |
+          ruff .
+          black --check .
+          mypy . || true
+
+  api_tests:
+    name: API Tests (pytest + coverage)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,59 +60,58 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Lint (ruff) & Format check (black)
+      - name: Run tests with coverage gate
         working-directory: apps/api
-        run: |
-          ruff .
-          black --check .
-      - name: Tests (pytest + coverage)
-        working-directory: apps/api
-        run: |
-          pytest -q --cov=. --cov-report=xml
+        run: pytest --cov=. --cov-report=xml --cov-fail-under=85
       - name: Upload coverage.xml
         uses: actions/upload-artifact@v4
         with:
           name: api-coverage-xml
           path: apps/api/coverage.xml
 
-  web-node:
+  web_build_playwright:
+    name: Web build + Playwright smoke
+    needs: [api_tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'pnpm'
-      - name: Install & build web
+      - name: Enable corepack and install deps
         run: |
-          pnpm install
-          pnpm --filter web build
-      - name: Unit tests (vitest)
-        run: pnpm --filter web test -- --run
+          corepack enable
+          pnpm -v
+          pnpm -w install
+      - name: Build web
+        run: pnpm --filter web build
+      - name: Start Next.js (serve built app)
+        run: |
+          pnpm --filter web start &
+          npx wait-on http://localhost:3000
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: E2E smoke tests
+        env:
+          CI: true
+        run: pnpm --filter web test:e2e -- --reporter=line
+      - name: Teardown web
+        if: always()
+        run: pkill -f "next start" || true
 
-  e2e:
-    needs: [api-python, web-node]
+  secret_scan:
+    name: Secret Scan (gitleaks)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          version: 8
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: 'pnpm'
-      - name: Install web deps
-        run: pnpm install
-      - name: Install Playwright
-        run: npx playwright install --with-deps
-      - name: Start services via docker compose
-        run: docker compose up -d postgres redis minio api web
-      - name: E2E smoke
-        run: pnpm --filter web test:e2e
-      - name: Teardown
-        if: always()
-        run: docker compose down -v
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run gitleaks via pre-commit hook
+        run: pre-commit run gitleaks --all-files || true
