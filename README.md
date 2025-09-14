@@ -44,3 +44,23 @@ pnpm dev
 ```
 
 See `docs/ARCHITECTURE.md` for system design.
+
+## Troubleshooting
+
+### Web Tests: "Cannot find module @rollup/rollup-*"
+Run `pnpm install` from repository root, not from apps/web. See [apps/web/README.md](apps/web/README.md) for details.
+
+### Docker Services Not Starting
+1. Check logs: `docker compose logs [service] --tail 50`
+2. Common issues:
+   - Port conflicts: `lsof -i :3000` or `lsof -i :8000`
+   - Database connection: Ensure DATABASE_URL is set in docker-compose.yml
+   - Disk space: `docker system df`
+
+### CI/CD Pipeline
+The repository includes GitHub Actions CI that runs on all PRs and pushes to main:
+- API linting (Black, isort, mypy)
+- API tests with 75% coverage requirement
+- Web build and E2E smoke test
+
+See [.github/workflows/ci.yml](.github/workflows/ci.yml) for details.
